@@ -1,39 +1,154 @@
-<script>
-  const tg = window.Telegram.WebApp;
-  tg.expand();
-
-  let cart = [];
-  let totalPrice = 0;
-
-  function addToCart(name, price) {
-    cart.push(name);
-    totalPrice += price;
-    document.getElementById('total').innerText = totalPrice;
-  }
-
-  function checkout() {
-    const address = document.getElementById('address').value;
-    
-    if (cart.length === 0) {
-      alert('Koszyk jest pusty!');
-      return;
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Puff Market</title>
+  <!-- Oficjalne SDK Telegrama -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      background: #121212; 
+      color: #ffffff; 
+      margin: 0; 
+      padding: 15px; 
+      padding-bottom: 140px; 
     }
-    if (!address) {
-      alert('Wpisz dane do wysyłki!');
-      return;
+    h1 { text-align: center; color: #00f2fe; margin-top: 10px; margin-bottom: 20px; font-size: 24px; }
+    .product { 
+      background: #1e1e1e; 
+      border: 1px solid #333; 
+      border-radius: 12px; 
+      padding: 14px; 
+      margin-bottom: 12px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+    }
+    .product-title { font-weight: bold; font-size: 16px; display: block; margin-bottom: 4px; }
+    .product-price { color: #00f2fe; font-size: 14px; }
+    .btn { 
+      background: #0088cc; 
+      color: #fff; 
+      border: none; 
+      padding: 10px 16px; 
+      border-radius: 8px; 
+      font-weight: bold; 
+      cursor: pointer; 
+    }
+    .btn:active { background: #006699; }
+    .cart-box { 
+      background: #1e1e1e; 
+      border-top: 2px solid #00f2fe; 
+      position: fixed; 
+      bottom: 0; 
+      left: 0; 
+      right: 0; 
+      padding: 15px; 
+      text-align: center; 
+      box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+    }
+    input { 
+      width: 100%; 
+      padding: 12px; 
+      margin-bottom: 10px; 
+      border-radius: 8px; 
+      border: 1px solid #444; 
+      background: #2c2c2e; 
+      color: #fff; 
+      font-size: 14px;
+    }
+    .pay-btn { 
+      background: #34c759; 
+      color: #fff; 
+      border: none; 
+      width: 100%; 
+      padding: 14px; 
+      border-radius: 10px; 
+      font-size: 16px; 
+      font-weight: bold; 
+      cursor: pointer; 
+    }
+    .pay-btn:active { background: #28a745; }
+  </style>
+</head>
+<body>
+
+  <h1>🛍️ Puff Market</h1>
+
+  <!-- Lista produktów -->
+  <div class="product">
+    <div>
+      <span class="product-title">Puff Smak Truskawka</span>
+      <span class="product-price">100 ⭐️</span>
+    </div>
+    <button class="btn" onclick="addToCart('Puff Truskawka', 100)">+ Dodaj</button>
+  </div>
+
+  <div class="product">
+    <div>
+      <span class="product-title">Puff Smak Borówka</span>
+      <span class="product-price">100 ⭐️</span>
+    </div>
+    <button class="btn" onclick="addToCart('Puff Borówka', 100)">+ Dodaj</button>
+  </div>
+
+  <div class="product">
+    <div>
+      <span class="product-title">Dostawa (Paczkomat)</span>
+      <span class="product-price">30 ⭐️</span>
+    </div>
+    <button class="btn" onclick="addToCart('Dostawa', 30)">+ Dodaj</button>
+  </div>
+
+  <!-- Koszyk na dole -->
+  <div class="cart-box">
+    <input type="text" id="address" placeholder="Wpisz kod Paczkomatu i nr telefonu...">
+    <div style="margin-bottom: 10px; font-weight: bold;">Suma: <span id="total" style="color: #00f2fe;">0</span> ⭐️</div>
+    <button class="pay-btn" onclick="checkout()">Zapłać w Gwiazdkach ⭐️</button>
+  </div>
+
+  <script>
+    // Inicjalizacja Telegram WebApp
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    let cart = [];
+    let totalPrice = 0;
+
+    function addToCart(name, price) {
+      cart.push(name);
+      totalPrice += price;
+      document.getElementById('total').innerText = totalPrice;
     }
 
-    // Przygotowanie danych zamówienia
-    const orderData = {
-      items: cart.join(', '),
-      total: totalPrice,
-      address: address
-    };
+    function checkout() {
+      const address = document.getElementById('address').value.trim();
 
-    // Wysyłamy dane z Mini App do naszego Bota na czacie
-    tg.sendData(JSON.stringify(orderData));
-    
-    // Zamykamy Mini App
-    tg.close();
-  }
-</script>
+      if (cart.length === 0) {
+        tg.showAlert('Koszyk jest pusty! Dodaj produkty.');
+        return;
+      }
+      if (!address) {
+        tg.showAlert('Wpisz dane do wysyłki w polu poniżej!');
+        return;
+      }
+
+      // Przygotowanie danych zamówienia
+      const payload = {
+        order: cart.join(', '),
+        total_stars: totalPrice,
+        delivery_address: address
+      };
+
+      // Wysyłamy zamówienie bezpośrednio do czatu z botem
+      tg.sendData(JSON.stringify(payload));
+      
+      // Zamykamy Mini Aplikację
+      tg.close();
+    }
+  </script>
+</body>
+</html>
