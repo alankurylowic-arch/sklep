@@ -1,0 +1,39 @@
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.expand();
+
+  let cart = [];
+  let totalPrice = 0;
+
+  function addToCart(name, price) {
+    cart.push(name);
+    totalPrice += price;
+    document.getElementById('total').innerText = totalPrice;
+  }
+
+  function checkout() {
+    const address = document.getElementById('address').value;
+    
+    if (cart.length === 0) {
+      alert('Koszyk jest pusty!');
+      return;
+    }
+    if (!address) {
+      alert('Wpisz dane do wysyłki!');
+      return;
+    }
+
+    // Przygotowanie danych zamówienia
+    const orderData = {
+      items: cart.join(', '),
+      total: totalPrice,
+      address: address
+    };
+
+    // Wysyłamy dane z Mini App do naszego Bota na czacie
+    tg.sendData(JSON.stringify(orderData));
+    
+    // Zamykamy Mini App
+    tg.close();
+  }
+</script>
